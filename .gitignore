@@ -215,3 +215,5 @@ fabric.properties
 # See https://youtrack.jetbrains.com/issue/JBR-2257
 
 # End of https://www.toptal.com/developers/gitignore/api/c,jetbrains,clion
+
+.idea
