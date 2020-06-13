@@ -1,4 +1,5 @@
-#include "include.h"
+#include "common.h"
+#include "hashcons.h"
 
 typedef struct dummy {
     int key;

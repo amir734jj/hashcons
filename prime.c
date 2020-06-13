@@ -1,3 +1,4 @@
+#include "common.h"
 #include "math.h"
 
 /*
@@ -50,7 +51,7 @@ int next_prime(int x)
 int next_twin_prime(int x)
 {
     int attempts = 0;
-    while (1)
+    while (TRUE)
     {
         int prime = next_prime(x);
         if (is_prime(prime - 2))

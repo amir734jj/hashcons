@@ -1,5 +1,8 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "common.h"
+#include "prime.h"
 #include "hashcons.h"
 
 #define HC_INITIAL_BASE_SIZE 61

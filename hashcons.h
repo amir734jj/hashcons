@@ -1,7 +1,7 @@
 #ifndef HASHCONS_H
 #define HASHCONS_H
 
-#include "include.h"
+#include <stddef.h>
 
 typedef long (*HASH_CONS_HASH)(void *);
 

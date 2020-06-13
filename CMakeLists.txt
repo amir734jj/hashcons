@@ -3,4 +3,4 @@ project(hashcons C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(hashcons main.c hashcons.h hashcons.c prime.h prime.c include.h)
+add_executable(hashcons main.c hashcons.h hashcons.c prime.h prime.c common.h)
