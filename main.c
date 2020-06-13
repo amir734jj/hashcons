@@ -2,6 +2,7 @@
 #include "hashcons.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "test.h"
 
 typedef struct dummy {
     int key;
@@ -31,7 +32,7 @@ int main() {
     hc->hashf = hash;
     hc->equalf = equal;
     hc->size = 0;
-    int count = 30000;
+    int count = 300;
 
     printf("starting to add stuff\n");
     int i;
@@ -49,6 +50,8 @@ int main() {
     printf("finished getting stuff\n");
 
     printf("Done!");
+
+    test_integer_table();
 
     return 0;
 }
