@@ -1,5 +1,7 @@
 #include "common.h"
 #include "hashcons.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct dummy {
     int key;
@@ -29,7 +31,7 @@ int main() {
     hc->hashf = hash;
     hc->equalf = equal;
     hc->size = 0;
-    int count = 30;
+    int count = 30000;
 
     printf("starting to add stuff\n");
     int i;

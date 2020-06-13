@@ -30,8 +30,6 @@ void hc_initialize(HASH_CONS_TABLE hc, const int base_size) {
  */
 static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
 
-    printf("start resized from %d to %d\n", hc->capacity, capacity);
-
     HASH_CONS_TABLE temp_hc = malloc(sizeof(struct hash_cons_table));
     hc_initialize(temp_hc, capacity);
     temp_hc->equalf = hc->equalf;
@@ -47,8 +45,6 @@ static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
     hc->table = temp_hc->table;
     hc->capacity = capacity;
     free(temp_hc);
-
-    printf("end resized from %d to %d\n", hc->capacity, capacity);
 }
 
 /**
@@ -140,7 +136,6 @@ void *hash_cons_get(void *item, size_t temp_size, HASH_CONS_TABLE hc) {
     void *search_result = hc_search(hc, item);
 
     if (search_result == NULL) {
-        printf("did not find the item\n");
         // memcopy item before insert
         void *copied_item = malloc(temp_size);
         memcpy(copied_item, item, temp_size);
@@ -149,7 +144,6 @@ void *hash_cons_get(void *item, size_t temp_size, HASH_CONS_TABLE hc) {
 
         return item;
     } else {
-        printf("found the item\n");
         return search_result;
     }
 }

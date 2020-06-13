@@ -1,5 +1,5 @@
 #include "common.h"
-#include "math.h"
+#include <math.h>
 
 /*
  * Returns whether x is prime or not.

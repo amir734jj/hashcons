@@ -4,3 +4,5 @@ project(hashcons C)
 set(CMAKE_C_STANDARD 99)
 
 add_executable(hashcons main.c hashcons.h hashcons.c prime.h prime.c common.h)
+
+target_link_libraries(hashcons m)
