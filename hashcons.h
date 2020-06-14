@@ -19,7 +19,7 @@ typedef struct hash_cons_table {
  * Get item if there is one otherwise create one
  * @param temp_item it is a temporary or perhaps stack allocated creation of item
  * @param temp_size how many bytes it is
- * @param table
+ * @param hashcons table
  */
 void *hash_cons_get(void *temp_item, size_t temp_size, HASH_CONS_TABLE table);
 

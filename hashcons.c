@@ -13,9 +13,13 @@
 
 void hc_insert(HASH_CONS_TABLE hc, void *item);
 
-void hc_initialize(HASH_CONS_TABLE hc, const int base_size) {
-    hc->capacity = base_size;
-//    hc->table = malloc(hc->capacity * sizeof(void *));
+/**
+ * Initialized a table
+ * @param hc table
+ * @param capacity
+ */
+void hc_initialize(HASH_CONS_TABLE hc, const int capacity) {
+    hc->capacity = capacity;
     hc->table = calloc(hc->capacity, sizeof(void *));
     hc->size = 0;
     int i;
@@ -24,9 +28,10 @@ void hc_initialize(HASH_CONS_TABLE hc, const int base_size) {
     }
 }
 
-
 /**
- * Resizes the table by creating a temporary hash table for values to go off of.
+ * Resizes the table by creating a temporary table
+ * @param hc table
+ * @param capacity of resized table
  */
 static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
 
@@ -49,6 +54,7 @@ static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
 
 /**
  * Increases the table size based on the "base size" by a factor of 2 + 1
+ * @param hc table
  */
 static void hc_resize_up(HASH_CONS_TABLE hc) {
     const int new_capacity = next_twin_prime((hc->capacity << 1) + 1);
@@ -56,20 +62,43 @@ static void hc_resize_up(HASH_CONS_TABLE hc) {
     hc_resize(hc, new_capacity);
 }
 
+/**
+ * Index derived from two hash values and attempt counter
+ * @param index1
+ * @param index2
+ * @param attempt
+ * @param capacity
+ * @return index
+ */
 static int hc_get_index(const int index1, const int index2, const int attempt, const int capacity) {
     return (index1 + attempt * index2) % capacity;
 }
 
+/**
+ * hash function that calculates h1 based on Michael Main Data Structures book
+ * @param hashcons table
+ * @param item
+ * @return hash1 value
+ */
 static int hash1(HASH_CONS_TABLE hc, void *item) {
     return labs(hc->hashf(item)) % hc->capacity;
 }
 
+/**
+ * hash function that calculates h2 based on Michael Main Data Structures book
+ * @param hashcons table
+ * @param item
+ * @return hash2 value
+ */
 static int hash2(HASH_CONS_TABLE hc, void *item) {
     return labs(hc->hashf(item)) % (hc->capacity - 2);
 }
 
+
 /**
- * Inserts a key/value pair into the hash table.
+ * Inserts a key/value pair into the hash table
+ * @param hc table
+ * @param item to insert
  */
 void hc_insert(HASH_CONS_TABLE hc, void *item) {
     if (hc->size > hc->capacity * MAX_DENSITY) {
@@ -103,8 +132,10 @@ void hc_insert(HASH_CONS_TABLE hc, void *item) {
 }
 
 /**
- * Searches through the hash table for the value of the corresponding key. If nothing is found, NULL
- * is returned.
+ * Searches through the table for the value with corresponding hash
+ * @param hc table
+ * @param item to search in table
+ * @return item
  */
 void *hc_search(HASH_CONS_TABLE hc, void *item) {
     int h1 = hash1(hc, item);
