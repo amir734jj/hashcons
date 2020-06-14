@@ -35,7 +35,7 @@ static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
     temp_hc->equalf = hc->equalf;
     temp_hc->hashf = hc->hashf;
 
-    for (int i = 0; i < hc->size; i++) {
+    for (int i = 0; i < hc->capacity; i++) {
         void *item = hc->table[i];
         if (item != NULL) {
             hc_insert(temp_hc, item);
