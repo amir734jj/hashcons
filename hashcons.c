@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
@@ -167,8 +166,6 @@ void *hash_cons_get(void *item, size_t temp_size, HASH_CONS_TABLE hc) {
     void *search_result = hc_search(hc, item);
 
     if (search_result == NULL) {
-        printf("adding\n");
-
         // memcopy item before insert
         void *copied_item = malloc(temp_size);
         memcpy(copied_item, item, temp_size);
@@ -177,7 +174,6 @@ void *hash_cons_get(void *item, size_t temp_size, HASH_CONS_TABLE hc) {
 
         return copied_item;
     } else {
-        printf("getting\n");
         return search_result;
     }
 }
