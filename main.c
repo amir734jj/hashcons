@@ -26,6 +26,39 @@ DUMMY create_dummy(int key) {
     return dummy;
 }
 
+static int test_adding_items(HASH_CONS_TABLE hc, int test_sample)
+{
+    printf("starting to add stuff\n");
+    int failure_count = 0;
+    for (int i = 0; i < test_sample; i++) {
+        void *item = create_dummy(i);
+        if (!hash_cons_get(item, sizeof(struct dummy), hc))
+        {
+            failure_count++;
+        }
+    }
+    printf("finished adding stuff\n");
+
+    return failure_count;
+}
+
+static int test_getting_times(HASH_CONS_TABLE hc, int test_sample)
+{
+    printf("starting to get stuff\n");
+    int failure_count = 0;
+    for (size_t i = 0; i < test_sample; i++) {
+        void *item = create_dummy(i);
+
+        if (hash_cons_get(item, sizeof(struct dummy), hc) == NULL)
+        {
+            failure_count++;
+            printf("Item %d not found\n", i);
+        }
+    }
+    printf("finished getting stuff\n");
+
+    return failure_count;
+}
 
 int main() {
     HASH_CONS_TABLE hc = malloc(sizeof(struct hash_cons_table));
@@ -45,13 +78,20 @@ int main() {
     printf("starting to get stuff\n");
     for (i = 0; i < count; i++) {
         void *item = create_dummy(i);
-        hash_cons_get(item, sizeof(struct dummy), hc);
+        if (hash_cons_get(item, sizeof(struct dummy), hc) == NULL)
+        {
+            printf("Item %d not found\n", i);
+        }
     }
     printf("finished getting stuff\n");
 
     printf("Done!");
 
     test_integer_table();
+
+    test_adding_items(hc, 100);
+
+    test_getting_times(hc, 100);
 
     return 0;
 }

@@ -2,17 +2,17 @@
 #define HASHCONS_H
 
 #include <stddef.h>
+#include <stdbool.h>
 
-typedef long (*HASH_CONS_HASH)(void *);
-
-typedef int (*HASH_CONS_EQUAL)(void *, void *);
+typedef int (*Hash_Cons_Hash)(void *);
+typedef bool (*Hash_Cons_Equal)(void *, void *);
 
 typedef struct hash_cons_table {
     int size;
     int capacity;
     void **table;
-    HASH_CONS_HASH hashf;
-    HASH_CONS_EQUAL equalf;
+    Hash_Cons_Hash hashf;
+    Hash_Cons_Equal equalf;
 } *HASH_CONS_TABLE;
 
 /**

@@ -1,179 +1,88 @@
 #include <stdlib.h>
 #include <string.h>
-#include "common.h"
 #include "prime.h"
 #include "hashcons.h"
 
 #define HC_INITIAL_BASE_SIZE 61
-
-// if it's bigger, we need to rehash
-// if size > capacity * MAX_DENSITY then rehash
 #define MAX_DENSITY 0.5
 
-void hc_insert(HASH_CONS_TABLE hc, void *item);
+typedef void *(*Table_Traverse_Func)(HASH_CONS_TABLE, int, void *);
 
-/**
- * Initialized a table
- * @param hc table
- * @param capacity
- */
 void hc_initialize(HASH_CONS_TABLE hc, const int capacity) {
     hc->capacity = capacity;
     hc->table = calloc(hc->capacity, sizeof(void *));
     hc->size = 0;
-    int i;
-    for (i = 0; i < hc->capacity; i++) {
-        hc->table[i] = NULL;
-    }
 }
 
-/**
- * Resizes the table by creating a temporary table
- * @param hc table
- * @param capacity of resized table
- */
-static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
-
-    HASH_CONS_TABLE temp_hc = malloc(sizeof(struct hash_cons_table));
-    hc_initialize(temp_hc, capacity);
-    temp_hc->equalf = hc->equalf;
-    temp_hc->hashf = hc->hashf;
-
-    for (int i = 0; i < hc->capacity; i++) {
-        void *item = hc->table[i];
-        if (item != NULL) {
-            hc_insert(temp_hc, item);
-        }
-    }
-
-    hc->table = temp_hc->table;
-    hc->capacity = capacity;
-    free(temp_hc);
-}
-
-/**
- * Increases the table size based on the "base size" by a factor of 2 + 1
- * @param hc table
- */
-static void hc_resize_up(HASH_CONS_TABLE hc) {
-    const int new_capacity = next_twin_prime((hc->capacity << 1) + 1);
-
-    hc_resize(hc, new_capacity);
-}
-
-/**
- * Index derived from two hash values and attempt counter
- * @param index1
- * @param index2
- * @param attempt
- * @param capacity
- * @return index
- */
-static int hc_get_index(const int index1, const int index2, const int attempt, const int capacity) {
-    return (index1 + attempt * index2) % capacity;
-}
-
-/**
- * hash function that calculates h1 based on Michael Main Data Structures book
- * @param hashcons table
- * @param item
- * @return hash1 value
- */
-static int hash1(HASH_CONS_TABLE hc, void *item) {
-    return labs(hc->hashf(item)) % hc->capacity;
-}
-
-/**
- * hash function that calculates h2 based on Michael Main Data Structures book
- * @param hashcons table
- * @param item
- * @return hash2 value
- */
-static int hash2(HASH_CONS_TABLE hc, void *item) {
-    return labs(hc->hashf(item)) % (hc->capacity - 2);
-}
-
-
-/**
- * Inserts a key/value pair into the hash table
- * @param hc table
- * @param item to insert
- */
-void hc_insert(HASH_CONS_TABLE hc, void *item) {
-    if (hc->size > hc->capacity * MAX_DENSITY) {
-        hc_resize_up(hc);
-    }
-
-    int h1 = hash1(hc, item);
-    int h2 = hash2(hc, item);
-
-    // if collision occurs
-    if (hc->table[h1] != NULL) {
-        int attempt = 1;
-        while (TRUE) {
-            // get new index
-            int index = hc_get_index(h1, h2, attempt, hc->capacity);
-
-            // if no collision occurs, store
-            if (hc->table[index] == NULL) {
-                hc->table[index] = item;
-                break;
-            }
-            attempt++;
-        }
-    }
-        // if no collision occurs
-    else {
-        hc->table[h1] = item;
-    }
-
-    hc->size++;
-}
-
-/**
- * Searches through the table for the value with corresponding hash
- * @param hc table
- * @param item to search in table
- * @return item
- */
-void *hc_search(HASH_CONS_TABLE hc, void *item) {
-    int h1 = hash1(hc, item);
-    int h2 = hash2(hc, item);
-
+static void *hc_traverse(HASH_CONS_TABLE hc, void *item, Table_Traverse_Func action) {
     int attempt = 0;
-    while (attempt < hc->capacity) {
-        int index = hc_get_index(h1, h2, attempt, hc->capacity);
+    int hash = hc->hashf(item);
+    int h1 = hash % hc->capacity;
+    int h2 = hash % (hc->capacity - 2);
 
-        // Failed to find
-        if (hc->table[index] == NULL) {
-            break;
-        } else if (hc->equalf(hc->table[index], item)) {
-            return hc->table[index];
+    while (attempt < hc->capacity) {
+        int index = abs(h1 + attempt++ * h2) % hc->capacity;
+        void *result = action(hc, index, item);
+
+        if (result != NULL) {
+            return result;
         }
 
         attempt++;
     }
+}
 
-    return NULL;
+static void *hc_insert(HASH_CONS_TABLE hc, int index, void *item) {
+    if (item == NULL) {
+        hc->table[index] = item;
+        hc->size++;
+        return item;
+    } else {
+        return NULL;
+    }
+}
+
+static void *hc_search(HASH_CONS_TABLE hc, int index, void *item) {
+    if (hc->table[index] != NULL && hc->equalf(hc->table[index], item)) {
+        return hc->table[index];
+    } else {
+        return NULL;
+    }
+}
+
+static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
+    void **old_table = hc->table;
+    int old_capacity = hc->capacity;
+    hc_initialize(hc, capacity);
+
+    for (int i = 0; i < old_capacity; i++) {
+        void *item = old_table[i];
+        if (item != NULL) {
+            hc_traverse(hc, item, hc_insert);
+        }
+    }
+
+    free(old_table);
 }
 
 void *hash_cons_get(void *item, size_t temp_size, HASH_CONS_TABLE hc) {
-    // Initialize data-structure
+    void *result;
+
     if (hc->table == NULL) {
         hc_initialize(hc, HC_INITIAL_BASE_SIZE);
     }
 
-    void *search_result = hc_search(hc, item);
+    if (hc->size > hc->capacity * MAX_DENSITY) {
+        const int new_capacity = next_twin_prime((hc->capacity << 1) + 1);
+        hc_resize(hc, new_capacity);
+    }
 
-    if (search_result == NULL) {
-        // memcopy item before insert
-        void *copied_item = malloc(temp_size);
-        memcpy(copied_item, item, temp_size);
-
-        hc_insert(hc, copied_item);
-
-        return copied_item;
+    if ((result = hc_traverse(hc, item, hc_search)) != NULL) {
+        return result;
     } else {
-        return search_result;
+        result = malloc(temp_size);
+        memcpy(result, item, temp_size);
+
+        return hc_traverse(hc, result, hc_insert);
     }
 }
