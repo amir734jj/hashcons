@@ -10,6 +10,10 @@ long hash_integer(void *p) {
 
 
 bool equals_integer(void *p1, void *p2) {
+    if (p1 == NULL || p2 == NULL) {
+        return false;
+    }
+
     int *i1 = (int *) p1;
     int *i2 = (int *) p2;
     return *i1 == *i2;

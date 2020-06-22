@@ -6,48 +6,45 @@
 #define HC_INITIAL_BASE_SIZE 61
 #define MAX_DENSITY 0.5
 
-typedef void *(*Table_Traverse_Func)(HASH_CONS_TABLE, int, void *);
-
 void hc_initialize(HASH_CONS_TABLE hc, const int capacity) {
     hc->capacity = capacity;
     hc->table = calloc(hc->capacity, sizeof(void *));
     hc->size = 0;
 }
 
-static void *hc_traverse(HASH_CONS_TABLE hc, void *item, Table_Traverse_Func action) {
+static int hc_candidate_index(HASH_CONS_TABLE hc, void *item, bool insert_mode) {
     int attempt = 0;
     int hash = hc->hashf(item);
-    int h1 = hash % hc->capacity;
-    int h2 = hash % (hc->capacity - 2);
+    int index = hash % hc->capacity;
+    int step_size = 0;
 
-    while (attempt < hc->capacity) {
-        int index = abs(h1 + attempt++ * h2) % hc->capacity;
-        void *result = action(hc, index, item);
-
-        if (result != NULL) {
-            return result;
+    while (attempt++ < hc->capacity) {
+        if (insert_mode && hc->table[index] == NULL) {
+            return index;
+        } else if (!insert_mode && hc->equalf(hc->table[index], item)) {
+            return index;
         }
 
-        attempt++;
+        if (attempt == 0) {
+            step_size = hash % (hc->capacity - 2);
+        }
+        index = (index + step_size) % hc->capacity;
     }
+
+    return -1;
 }
 
-static void *hc_insert(HASH_CONS_TABLE hc, int index, void *item) {
-    if (item == NULL) {
-        hc->table[index] = item;
-        hc->size++;
-        return item;
-    } else {
-        return NULL;
-    }
+static void *hc_insert(HASH_CONS_TABLE hc, void *item) {
+    int index = hc_candidate_index(hc, item, true);
+
+    hc->table[index] = item;
+    hc->size++;
 }
 
-static void *hc_search(HASH_CONS_TABLE hc, int index, void *item) {
-    if (hc->table[index] != NULL && hc->equalf(hc->table[index], item)) {
-        return hc->table[index];
-    } else {
-        return NULL;
-    }
+static void *hc_search(HASH_CONS_TABLE hc, void *item) {
+    int index = hc_candidate_index(hc, item, false);
+
+    return index == -1 ? NULL : hc->table[index];
 }
 
 static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
@@ -58,7 +55,7 @@ static void hc_resize(HASH_CONS_TABLE hc, const int capacity) {
     for (int i = 0; i < old_capacity; i++) {
         void *item = old_table[i];
         if (item != NULL) {
-            hc_traverse(hc, item, hc_insert);
+            hc_insert(hc, item);
         }
     }
 
@@ -77,12 +74,14 @@ void *hash_cons_get(void *item, size_t temp_size, HASH_CONS_TABLE hc) {
         hc_resize(hc, new_capacity);
     }
 
-    if ((result = hc_traverse(hc, item, hc_search)) != NULL) {
+    if ((result = hc_search(hc, item)) != NULL) {
         return result;
     } else {
         result = malloc(temp_size);
         memcpy(result, item, temp_size);
 
-        return hc_traverse(hc, result, hc_insert);
+        hc_insert(hc, result);
+
+        return result;
     }
 }
