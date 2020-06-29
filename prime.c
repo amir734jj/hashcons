@@ -1,65 +1,61 @@
-#include "common.h"
-#include <math.h>
+#include "prime.h"
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
-/*
- * Returns whether x is prime or not.
- * 1 if prime
- * 0 if not prime
- * -1 if undefined.
- */
-int is_prime(const int x)
-{
-    if (x < 2)
-    {
-        return -1;
-    }
-    if (x < 4)
-    {
-        return 1;
-    }
-    if ((x % 2) == 0)
-    {
-        return 0;
-    }
+#define INITIAL_TABLE_SIZE 9973
 
-    for (int i = 3; i <= floor(sqrt((double)x)); i += 2)
-    {
-        if ((x % i) == 0)
-        {
-            return 0;
-        }
-    }
-    return 1;
-}
+struct PrimesTable {
+    int size;
+    bool *table;
+};
+
+struct PrimesTable primesTable = {0, 0};
 
 /**
- * Returns next possible prime
+ * Create a boolean array "prime[0..n]" and initialize
+ * all entries it as true. A value in prime[i] will
+ * finally be false if i is Not a prime, else true.
  */
-int next_prime(int x)
-{
-    while (is_prime(x) != 1)
-    {
-        x++;
+void initialize_sieve_of_eratosthenes(int n) {
+    if (primesTable.table == NULL) {
+        primesTable.size = n;
+        primesTable.table = malloc(n * sizeof(bool));
+        memset(primesTable.table, true, primesTable.size);
+    } else {
+        int original_size = primesTable.size;
+        bool *original_table = primesTable.table;
+
+        primesTable.size = n;
+        primesTable.table = malloc(n * sizeof(bool));
+        memset(primesTable.table, true, primesTable.size);
+        memcpy(primesTable.table, original_table, original_size * sizeof(bool));
+        free(original_table);
     }
 
-    return x;
+    for (int p = 2; p * p < n; p++) {
+        // If primes[p] is not changed, then it is a prime
+        if (primesTable.table[p] == true) {
+            // Update all multiples of p
+            for (int i = p * 2; i <= n; i += p) primesTable.table[i] = false;
+        }
+    }
 }
 
 /**
  * Return the next prime greater than parameter such that -2 is also a prime
  */
-int next_twin_prime(int x)
-{
-    int attempts = 0;
-    while (TRUE)
-    {
-        int prime = next_prime(x);
-        if (is_prime(prime - 2))
-        {
-            return prime;
-        }
-
-        attempts++;
-        x = prime + 1;
+int next_twin_prime(int x) {
+    if (primesTable.table == 0) {
+        initialize_sieve_of_eratosthenes(INITIAL_TABLE_SIZE);
     }
+
+    int i;
+    for (i = x + 1; i < primesTable.size; i++) {
+        if (primesTable.table[i] && primesTable.table[i - 2]) return i;
+    }
+
+    initialize_sieve_of_eratosthenes((primesTable.size << 1) + 1);
+
+    return next_twin_prime(x);
 }
