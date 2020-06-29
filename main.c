@@ -1,4 +1,3 @@
-#include "common.h"
 #include "hashcons.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +13,7 @@ long hash(void *item) {
 
 int equal(void *item1, void *item2) {
     if (item1 == NULL || item2 == NULL) {
-        return FALSE;
+        return false;
     }
 
     return ((DUMMY) item1)->key == ((DUMMY) item2)->key;
@@ -61,7 +60,7 @@ static int test_getting_times(HASH_CONS_TABLE hc, int test_sample)
 }
 
 int main() {
-    HASH_CONS_TABLE hc = malloc(sizeof(struct hash_cons_table));
+    HASH_CONS_TABLE hc = malloc(sizeof(*hc));
     hc->hashf = hash;
     hc->equalf = equal;
     hc->size = 0;
