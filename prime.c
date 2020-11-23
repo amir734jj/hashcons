@@ -1,75 +1,102 @@
 #include "prime.h"
-
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include "stdlib.h"
+#include "string.h"
 
 #define INITIAL_TABLE_SIZE 9973
+#define DOUBLE_SIZE(x) ((x << 1) + 1)
 
-struct PrimesTable {
-  int size;
-  bool *table;
-};
+typedef struct
+{
+  bool *array;
+  unsigned int size;
+} PRIMES;
 
-struct PrimesTable primesTable = {0, 0};
+/**
+ * Holds the dynamically allocated array and its size
+ */
+static PRIMES primes = {NULL, 0};
 
 /**
  * Create a boolean array "prime[0..n]" and initialize
- * all entries it as true. A value in prime[i] will
- * finally be false if i is Not a prime, else true.
+ * all entries as true. A value in prime[i] will
+ * finally be false if i is not a prime, else true.
+ * @param n size of the lookup array
  */
-void initialize_sieve_of_eratosthenes(int n) {
-  if (primesTable.table == NULL) {
-    primesTable.size = n;
-    primesTable.table = malloc(n * sizeof(bool));
-    if (primesTable.table == NULL) {
-      fprintf(stderr,
-              "Memory Allocation of primesTable.table error in "
-              "initialize_sieve_of_eratosthenes().\nExiting Program.");
-      exit(EXIT_FAILURE);
-    }
-    memset(primesTable.table, true, primesTable.size);
-  } else {
-    int original_size = primesTable.size;
-    bool *original_table = primesTable.table;
+static void sieve_of_eratosthenes(int n)
+{
+  primes.size = n;
 
-    primesTable.size = n;
-    primesTable.table = malloc(n * sizeof(bool));
-    if (primesTable.table == NULL) {
-      fprintf(stderr,
-              "Memory Allocation of primesTable.table error in "
-              "initialize_sieve_of_eratosthenes().\nExiting Program.");
-      exit(EXIT_FAILURE);
-    }
-    memset(primesTable.table, true, primesTable.size);
-    memcpy(primesTable.table, original_table, original_size * sizeof(bool));
-    free(original_table);
+  size_t bytes = n * sizeof(bool);
+  if (primes.array == NULL)
+  {
+    primes.array = malloc(bytes);
+  }
+  else
+  {
+    primes.array = realloc(primes.array, bytes);
   }
 
-  for (int p = 2; p * p < n; p++) {
+  memset(primes.array, true, bytes);
+
+  primes.array[0] = false;  // 0 is not a prime
+  primes.array[1] = false;  // 1 is not a prime
+
+  int i, j;
+  for (i = 2; i * i < n; i++)
+  {
     // If primes[p] is not changed, then it is a prime
-    if (primesTable.table[p] == true) {
+    if (primes.array[i] == true)
+    {
       // Update all multiples of p
-      for (int i = p * 2; i <= n; i += p) primesTable.table[i] = false;
+      for (j = i * i; j < n; j += i)
+      {
+        primes.array[j] = false;
+      }
     }
   }
 }
 
 /**
- * Return the next prime greater than parameter such that -2 is also a prime
+ * Return the next prime number n great that or equal to the argument
+ * such that n -2 is also prime
+ * @param x lower bound prime number
+ * @return larger of the next twin prime 
  */
-int next_twin_prime(int x) {
-  if (primesTable.table == 0) {
-    initialize_sieve_of_eratosthenes(INITIAL_TABLE_SIZE);
+int next_twin_prime(int p)
+{
+  // If array is not initialized
+  if (primes.array == NULL)
+  {
+    sieve_of_eratosthenes(INITIAL_TABLE_SIZE);
   }
 
-  int i;
-  for (i = x + 1; i < primesTable.size; i++) {
-    if (primesTable.table[i] && primesTable.table[i - 2]) return i;
+  // If array size is not enough then resize the array
+  if (p >= primes.size)
+  {
+    int new_size = DOUBLE_SIZE(primes.size);
+
+    // Resized array is also not enough
+    if (new_size <= p)
+    {
+      new_size = DOUBLE_SIZE(p);
+    }
+
+    sieve_of_eratosthenes(new_size);
   }
 
-  initialize_sieve_of_eratosthenes((primesTable.size << 1) + 1);
+  while (true)
+  {
+    int i;
+    for (i = p; i < primes.size; i++)
+    {
+      if (primes.array[i] && primes.array[i - 2])
+      {
+        return i;
+      }
+    }
 
-  return next_twin_prime(x);
+    // Resize the prime array and try again
+    sieve_of_eratosthenes(DOUBLE_SIZE(primes.size));
+  }
 }
