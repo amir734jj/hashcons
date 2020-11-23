@@ -143,6 +143,12 @@ void *hash_cons_get(void *item, size_t temp_size, HASH_CONS_TABLE hc)
   }
 }
 
+/**
+ * Hash string
+ * Source: http://www.cse.yorku.ca/~oz/hash.html
+ * @param string
+ * @return intger hash value
+ */
 int hash_string(char *str)
 {
   int hash = 5381;
@@ -156,6 +162,12 @@ int hash_string(char *str)
   return hash;
 }
 
+/**
+ * Combine two hash values into one
+ * @param hash1
+ * @param hash2
+ * @return combined hash 
+ */
 int hash_mix(int h1, int h2)
 {
   int hash = 17;
